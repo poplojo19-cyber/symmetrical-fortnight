@@ -1,0 +1,22 @@
+{
+    "coinmarketcap_api_key": "YOUR_CMC_API_KEY_HERE",
+    "exchange": {
+        "name": "binance",
+        "api_key": "YOUR_EXCHANGE_API_KEY",
+        "secret": "YOUR_EXCHANGE_SECRET",
+        "sandbox": true
+    },
+    "trading": {
+        "base_currency": "USDT",
+        "amount_per_trade": 100,
+        "rsi_period": 14,
+        "rsi_oversold": 30,
+        "rsi_overbought": 70,
+        "stop_loss_percent": 2.0,
+        "take_profit_percent": 5.0,
+        "max_positions": 5
+    },
+    "coins": ["BTC", "ETH", "BNB", "SOL", "ADA", "DOT", "MATIC", "LINK"],
+    "check_interval_minutes": 5,
+    "dry_run": true
+}
