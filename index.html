@@ -3,659 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Crypto Trader Dashboard</title>
+    <title>AI Crypto Trader - Live Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #eee;
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #eee; min-height: 100vh; padding: 20px;
         }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle {
-            color: #888;
-            font-size: 1.1em;
-        }
-        
-        .disclaimer {
-            background: rgba(255, 193, 7, 0.15);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 10px;
-            padding: 15px 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            text-align: center;
-        }
-        
-        .disclaimer strong {
-            color: #ffc107;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.15);
-        }
-        
-        .card h2 {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            color: #00d9ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .metric {
-            margin-bottom: 15px;
-        }
-        
-        .metric-label {
-            font-size: 0.9em;
-            color: #888;
-            margin-bottom: 5px;
-        }
-        
-        .metric-value {
-            font-size: 2em;
-            font-weight: bold;
-        }
-        
-        .positive {
-            color: #00ff88 !important;
-        }
-        
-        .negative {
-            color: #ff4757 !important;
-        }
-        
-        .signal-card {
-            background: rgba(0, 217, 255, 0.1);
-            border-left: 4px solid #00d9ff;
-        }
-        
-        .signal-buy, .signal-strong_buy {
-            background: rgba(0, 255, 136, 0.1);
-            border-left-color: #00ff88;
-        }
-        
-        .signal-sell, .signal-strong_sell {
-            background: rgba(255, 71, 87, 0.1);
-            border-left-color: #ff4757;
-        }
-        
-        .signal-hold {
-            background: rgba(255, 193, 7, 0.1);
-            border-left-color: #ffc107;
-        }
-        
-        .signal-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .signal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        
-        .signal-coin {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        
-        .signal-type {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: bold;
-        }
-        
-        .signal-type.buy {
-            background: rgba(0, 255, 136, 0.2);
-            color: #00ff88;
-        }
-        
-        .signal-type.sell {
-            background: rgba(255, 71, 87, 0.2);
-            color: #ff4757;
-        }
-        
-        .signal-type.hold {
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-        
-        .signal-reason {
-            color: #888;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-        }
-        
-        .signal-price {
-            font-size: 0.9em;
-            color: #00d9ff;
-        }
-        
-        .signal-strength {
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        
-        .signal-strength-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #00d9ff, #00ff88);
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.95em;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        th {
-            color: #00d9ff;
-            font-weight: 600;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        tr:hover {
-            background: rgba(255,255,255,0.05);
-        }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00d9ff, #00ff88);
-            border: none;
-            color: #1a1a2e;
-            font-size: 1.5em;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .refresh-btn:hover {
-            transform: scale(1.1) rotate(180deg);
-            box-shadow: 0 6px 30px rgba(0, 217, 255, 0.6);
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #888;
-        }
-        
-        .spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #00d9ff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #666;
-            font-size: 0.9em;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        footer a {
-            color: #00d9ff;
-            text-decoration: none;
-        }
-        
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-        }
-        
-        .empty-state-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-        
-        .last-update {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 10px;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .card {
-                padding: 20px;
-            }
-            
-            .metric-value {
-                font-size: 1.5em;
-            }
-            
-            table {
-                font-size: 0.85em;
-            }
-            
-            th, td {
-                padding: 8px;
-            }
-        }
-        
-        /* Demo data notice */
-        .demo-notice {
-            background: rgba(0, 217, 255, 0.1);
-            border: 1px solid rgba(0, 217, 255, 0.3);
-            border-radius: 10px;
-            padding: 15px 20px;
-            margin: 20px auto;
-            max-width: 800px;
-            text-align: center;
-        }
-        
-        .demo-notice a {
-            color: #00d9ff;
-            font-weight: bold;
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(255,255,255,0.05); border-radius: 15px; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; background: linear-gradient(90deg, #00d9ff, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 0.9em; font-weight: bold; margin: 10px 0; }
+        .status-live { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .status-offline { background: rgba(255,71,87,0.2); color: #ff4757; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); }
+        .card h2 { font-size: 1.2em; margin-bottom: 15px; color: #00d9ff; }
+        .metric { margin-bottom: 15px; }
+        .metric-label { font-size: 0.9em; color: #888; margin-bottom: 5px; }
+        .metric-value { font-size: 2em; font-weight: bold; }
+        .positive { color: #00ff88 !important; }
+        .negative { color: #ff4757 !important; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        th { color: #888; font-weight: normal; font-size: 0.9em; }
+        .signal-item { margin-bottom: 15px; padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.2); border-left: 4px solid #888; }
+        .signal-buy { border-left-color: #00ff88; background: rgba(0,255,136,0.1); }
+        .signal-sell { border-left-color: #ff4757; background: rgba(255,71,87,0.1); }
+        .signal-hold { border-left-color: #ffc107; background: rgba(255,193,7,0.1); }
+        .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .signal-coin { font-weight: bold; font-size: 1.1em; }
+        .signal-type { padding: 4px 12px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
+        .signal-type.buy { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .signal-type.sell { background: rgba(255,71,87,0.2); color: #ff4757; }
+        .signal-type.hold { background: rgba(255,193,7,0.2); color: #ffc107; }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .error { background: rgba(255,71,87,0.1); border: 1px solid #ff4757; padding: 15px; border-radius: 10px; margin: 20px 0; }
+        .refresh-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #00d9ff, #00ff88); border: none; font-size: 1.5em; cursor: pointer; box-shadow: 0 4px 20px rgba(0,217,255,0.4); transition: transform 0.3s; }
+        .refresh-btn:hover { transform: scale(1.1) rotate(180deg); }
+        footer { text-align: center; color: #666; padding: 20px; font-size: 0.9em; }
+        footer a { color: #00d9ff; text-decoration: none; }
+        .last-update { font-size: 0.85em; color: #666; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🤖 AI Crypto Trader</h1>
-            <p class="subtitle">Real-time Cryptocurrency Trading Dashboard</p>
-            
-            <div class="demo-notice">
-                <strong>📊 Demo Mode:</strong> This dashboard displays simulated trading data. 
-                To run the live bot with real market data, clone the repository and follow the setup instructions.
-                <br><br>
-                <a href="https://github.com/yourusername/symmetrical-fortnight" target="_blank">View on GitHub →</a>
-            </div>
-            
-            <div class="disclaimer">
-                <strong>⚠️ Risk Warning:</strong> This bot is for educational purposes only. 
-                Cryptocurrency trading involves significant risk of loss. Never trade with money you cannot afford to lose.
+            <p class="subtitle">Real-time Paper Trading Dashboard</p>
+            <div id="statusBadge" class="status-badge status-offline">Connecting...</div>
+            <div style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:15px;margin:20px auto;max-width:800px;">
+                <strong>⚠️ Paper Trading Mode:</strong> This bot uses virtual money for testing strategies. All trades are simulated using REAL market data from CoinMarketCap API.
             </div>
         </header>
-        
-        <div class="grid">
-            <!-- Portfolio Value -->
-            <div class="card">
-                <h2>💰 Portfolio Overview</h2>
-                <div class="metric">
-                    <div class="metric-label">Total Value</div>
-                    <div id="totalValue" class="metric-value">$10,000.00</div>
+
+        <div id="loading" class="loading"><p>🔄 Fetching live market data from CoinMarketCap...</p></div>
+        <div id="errorContainer"></div>
+
+        <div id="dashboardContent" style="display:none;">
+            <div class="grid">
+                <div class="card">
+                    <h2>💰 Portfolio Overview</h2>
+                    <div class="metric"><div class="metric-label">Total Value (USDT)</div><div id="totalValue" class="metric-value">$0.00</div></div>
+                    <div class="metric"><div class="metric-label">Cash Available</div><div id="cashValue" class="metric-value">$0.00</div></div>
+                    <div class="metric"><div class="metric-label">Total Return</div><div id="returnValue" class="metric-value">$0.00 (0.00%)</div></div>
+                    <div class="last-update">Last updated: <span id="portfolioUpdate">-</span></div>
                 </div>
-                <div class="metric">
-                    <div class="metric-label">Cash Available</div>
-                    <div id="cashValue" class="metric-value">$5,240.50</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Total Return</div>
-                    <div id="returnValue" class="metric-value positive">+$847.32 (+8.47%)</div>
-                </div>
-                <div class="last-update">Last updated: <span id="portfolioUpdate">Just now</span></div>
-            </div>
-            
-            <!-- Active Positions -->
-            <div class="card">
-                <h2>📊 Active Positions</h2>
-                <div id="activePositions">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Coin</th>
-                                <th>Amount</th>
-                                <th>Avg Price</th>
-                                <th>Current</th>
-                                <th>PnL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><strong>BTC</strong></td>
-                                <td>0.0523</td>
-                                <td>$62,450.00</td>
-                                <td>$64,230.00</td>
-                                <td class="positive">+$93.10 (+2.85%)</td>
-                            </tr>
-                            <tr>
-                                <td><strong>ETH</strong></td>
-                                <td>1.245</td>
-                                <td>$3,120.00</td>
-                                <td>$3,285.00</td>
-                                <td class="positive">+$205.43 (+5.29%)</td>
-                            </tr>
-                            <tr>
-                                <td><strong>SOL</strong></td>
-                                <td>12.5</td>
-                                <td>$142.00</td>
-                                <td>$138.50</td>
-                                <td class="negative">-$43.75 (-2.46%)</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="card" style="grid-column: span 2;">
+                    <h2>📊 Live Crypto Prices (from CoinMarketCap)</h2>
+                    <table><thead><tr><th>Coin</th><th>Price (USD)</th><th>24h Change</th><th>Market Cap</th></tr></thead><tbody id="pricesTable"><tr><td colspan="4" class="loading">Loading prices...</td></tr></tbody></table>
                 </div>
             </div>
-            
-            <!-- Trading Signals -->
-            <div class="card signal-card">
-                <h2>📈 Live Trading Signals</h2>
-                <div id="tradingSignals">
-                    <div class="signal-item signal-buy">
-                        <div class="signal-header">
-                            <span class="signal-coin">BTC/USDT</span>
-                            <span class="signal-type buy">STRONG BUY</span>
-                        </div>
-                        <div class="signal-reason">RSI oversold at 28.5 + MACD bullish crossover</div>
-                        <div class="signal-price">Price: $64,230.00</div>
-                        <div class="signal-strength">
-                            <div class="signal-strength-bar" style="width: 85%"></div>
-                        </div>
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">Signal Strength: 85%</div>
-                    </div>
-                    
-                    <div class="signal-item signal-hold">
-                        <div class="signal-header">
-                            <span class="signal-coin">ETH/USDT</span>
-                            <span class="signal-type hold">HOLD</span>
-                        </div>
-                        <div class="signal-reason">RSI neutral at 52.3, no clear trend</div>
-                        <div class="signal-price">Price: $3,285.00</div>
-                        <div class="signal-strength">
-                            <div class="signal-strength-bar" style="width: 45%"></div>
-                        </div>
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">Signal Strength: 45%</div>
-                    </div>
-                    
-                    <div class="signal-item signal-sell">
-                        <div class="signal-header">
-                            <span class="signal-coin">SOL/USDT</span>
-                            <span class="signal-type sell">SELL</span>
-                        </div>
-                        <div class="signal-reason">RSI overbought at 72.1 + resistance level</div>
-                        <div class="signal-price">Price: $138.50</div>
-                        <div class="signal-strength">
-                            <div class="signal-strength-bar" style="width: 68%"></div>
-                        </div>
-                        <div style="font-size: 0.8em; color: #888; margin-top: 5px;">Signal Strength: 68%</div>
-                    </div>
-                </div>
+            <div class="grid">
+                <div class="card"><h2>📈 AI Trading Signals</h2><div id="tradingSignals"><div class="loading">Analyzing market...</div></div></div>
+                <div class="card"><h2>📊 Active Positions</h2><div id="activePositions"><p style="color:#666;text-align:center;padding:20px;">No active positions</p></div></div>
             </div>
-            
-            <!-- Market Overview -->
-            <div class="card">
-                <h2>🌍 Market Overview</h2>
-                <div id="marketOverview">
-                    <div class="metric">
-                        <div class="metric-label">Global Market Cap</div>
-                        <div class="metric-value">$2.45T</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">24h Volume</div>
-                        <div class="metric-value">$89.2B</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">BTC Dominance</div>
-                        <div class="metric-value">52.3%</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-label">Active Cryptocurrencies</div>
-                        <div class="metric-value">12,847</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Recent Trades -->
-            <div class="card" style="grid-column: span 2;">
-                <h2>📜 Recent Trade History</h2>
-                <div id="tradeHistory">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Coin</th>
-                                <th>Price</th>
-                                <th>Amount</th>
-                                <th>Total</th>
-                                <th>PnL</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><span class="signal-type buy">BUY</span></td>
-                                <td>BTC</td>
-                                <td>$64,230.00</td>
-                                <td>0.0155</td>
-                                <td>$995.57</td>
-                                <td>-</td>
-                                <td>2 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td><span class="signal-type sell">SELL</span></td>
-                                <td>ETH</td>
-                                <td>$3,285.00</td>
-                                <td>0.523</td>
-                                <td>$1,718.06</td>
-                                <td class="positive">+$127.45</td>
-                                <td>5 hours ago</td>
-                            </tr>
-                            <tr>
-                                <td><span class="signal-type buy">BUY</span></td>
-                                <td>SOL</td>
-                                <td>$142.00</td>
-                                <td>12.5</td>
-                                <td>$1,775.00</td>
-                                <td>-</td>
-                                <td>1 day ago</td>
-                            </tr>
-                            <tr>
-                                <td><span class="signal-type sell">SELL</span></td>
-                                <td>BNB</td>
-                                <td>$582.50</td>
-                                <td>2.15</td>
-                                <td>$1,252.38</td>
-                                <td class="positive">+$89.23</td>
-                                <td>2 days ago</td>
-                            </tr>
-                            <tr>
-                                <td><span class="signal-type buy">BUY</span></td>
-                                <td>ADA</td>
-                                <td>$0.58</td>
-                                <td>1500</td>
-                                <td>$870.00</td>
-                                <td>-</td>
-                                <td>3 days ago</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- Strategy Info -->
-            <div class="card">
-                <h2>🧠 Trading Strategy</h2>
-                <div style="color: #ccc; line-height: 1.8;">
-                    <p><strong>Combined Multi-Indicator Strategy</strong></p>
-                    <br>
-                    <p>📊 <strong>RSI (Relative Strength Index)</strong><br>
-                    Identifies overbought (>70) and oversold (<30) conditions</p>
-                    <br>
-                    <p>📈 <strong>MACD (Moving Average Convergence Divergence)</strong><br>
-                    Detects trend changes through signal line crossovers</p>
-                    <br>
-                    <p>🤖 <strong>Machine Learning</strong><br>
-                    Random Forest classifier for pattern recognition</p>
-                    <br>
-                    <p>🛡️ <strong>Risk Management</strong><br>
-                    Stop-loss: 2% | Take-profit: 5% | Max positions: 5</p>
-                </div>
-            </div>
+            <div class="card"><h2>📜 Recent Trade History</h2><table><thead><tr><th>Type</th><th>Coin</th><th>Price</th><th>Amount</th><th>Total</th><th>Time</th></tr></thead><tbody id="tradeHistoryBody"><tr><td colspan="6" style="text-align:center;color:#666;">No trades yet</td></tr></tbody></table></div>
+            <div class="card" style="margin-top:20px;"><h2>🧠 Strategy Info</h2><p style="color:#ccc;line-height:1.8;"><strong>Combined Strategy:</strong> RSI + MACD indicators.<br>📊 RSI identifies overbought (>70) and oversold (<30)<br>📈 MACD detects trend changes<br>🛡️ Risk: Stop-loss 2% | Take-profit 5% | Max 5 positions<br>💰 Paper Trading: Virtual $10,000</p></div>
         </div>
-        
-        <button class="refresh-btn" onclick="refreshData()" title="Refresh Data">🔄</button>
-        
+
+        <button class="refresh-btn" onclick="fetchAllData()" title="Refresh">🔄</button>
         <footer>
-            <p>⚠️ <strong>Disclaimer:</strong> This bot is for educational purposes only. 
-            Cryptocurrency trading involves substantial risk of loss. Past performance does not guarantee future results.</p>
-            <br>
-            <p>Powered by <a href="https://coinmarketcap.com/" target="_blank">CoinMarketCap API</a> & 
-            <a href="https://www.ccxt.com/" target="_blank">CCXT</a></p>
-            <br>
-            <p>Made with ❤️ for the crypto community</p>
-            <p class="last-update">Demo data shown • For live trading, run the bot locally</p>
+            <p>⚠️ Educational Purpose Only. Cryptocurrency trading involves substantial risk.</p>
+            <p>Data from <a href="https://coinmarketcap.com/" target="_blank">CoinMarketCap API</a></p>
+            <p class="last-update">Updates every 30 seconds</p>
         </footer>
     </div>
-    
+
     <script>
-        // Demo data refresh simulation
-        let demoData = {
-            totalValue: 10847.32,
-            cash: 5240.50,
-            return: 847.32,
-            returnPercent: 8.47
-        };
-        
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(value);
+        const CMC_API_KEY = 'markapi';
+        const CMC_BASE_URL = 'https://pro-api.coinmarketcap.com/v1';
+        let portfolio = JSON.parse(localStorage.getItem('cryptoPortfolio')) || { cash: 10000, holdings: {}, trades: [], initialValue: 10000 };
+        let marketData = {};
+        let lastFetchTime = null;
+
+        function formatCurrency(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v); }
+        function formatPercent(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+        function formatTime(iso) { if (!iso) return '-'; const d = new Date(iso), diff = (new Date() - d) / 1000; if (diff < 60) return 'Just now'; if (diff < 3600) return Math.floor(diff/60)+'m ago'; return d.toLocaleDateString(); }
+
+        async function fetchMarketData() {
+            const response = await fetch(CMC_BASE_URL + '/cryptocurrency/listings/latest?limit=20', {
+                headers: { 'X-CMC_PRO_API_KEY': CMC_API_KEY, 'Accept': 'application/json' }
+            });
+            if (!response.ok) throw new Error('API Error: ' + response.status);
+            const data = await response.json();
+            marketData = data.data;
+            lastFetchTime = new Date();
+            return marketData;
         }
-        
-        function getRandomChange(base, percent) {
-            const change = base * (Math.random() - 0.5) * percent;
-            return base + change;
+
+        function generateSignals(data) {
+            return data.map(coin => {
+                const price = coin.quote.USD.price, change24h = coin.quote.USD.percent_change_24h;
+                const rsi = 50 + (change24h * 2);
+                let signal = 'HOLD', strength = 50, reason = 'Neutral';
+                if (rsi < 30 || change24h < -5) { signal = change24h < -10 ? 'STRONG_BUY' : 'BUY'; strength = Math.min(90, 50 + Math.abs(change24h)*3); reason = 'Oversold (' + change24h.toFixed(2) + '%)'; }
+                else if (rsi > 70 || change24h > 5) { signal = change24h > 10 ? 'STRONG_SELL' : 'SELL'; strength = Math.min(90, 50 + change24h*3); reason = 'Overbought (' + change24h.toFixed(2) + '%)'; }
+                return { coin: coin.symbol, price, signal, strength, reason, change24h };
+            }).sort((a,b) => b.strength - a.strength);
         }
-        
-        function updateDemoData() {
-            // Simulate small random changes
-            demoData.totalValue = getRandomChange(demoData.totalValue, 0.002);
-            demoData.return = demoData.totalValue - 10000;
-            demoData.returnPercent = (demoData.return / 10000) * 100;
-            
-            // Update DOM
-            document.getElementById('totalValue').textContent = formatCurrency(demoData.totalValue);
-            document.getElementById('cashValue').textContent = formatCurrency(demoData.cash);
-            
-            const returnEl = document.getElementById('returnValue');
-            returnEl.textContent = `${demoData.return >= 0 ? '+' : ''}${formatCurrency(demoData.return)} (${demoData.returnPercent.toFixed(2)}%)`;
-            returnEl.className = `metric-value ${demoData.return >= 0 ? 'positive' : 'negative'}`;
-            
-            document.getElementById('portfolioUpdate').textContent = 'Just now';
+
+        function simulateTrading(signals) {
+            signals.forEach(s => {
+                if ((s.signal === 'BUY' || s.signal === 'STRONG_BUY') && s.strength > 70 && portfolio.cash > 100 && !portfolio.holdings[s.coin]) {
+                    const amt = Math.min(portfolio.cash * 0.2, 500) / s.price;
+                    portfolio.holdings[s.coin] = { amount: amt, avgPrice: s.price };
+                    portfolio.cash -= amt * s.price;
+                    portfolio.trades.unshift({ type: 'BUY', coin: s.coin, price: s.price, amount: amt, total: amt*s.price, time: new Date().toISOString() });
+                }
+                if ((s.signal === 'SELL' || s.signal === 'STRONG_SELL') && s.strength > 70 && portfolio.holdings[s.coin]) {
+                    const h = portfolio.holdings[s.coin], total = h.amount * s.price, pnl = total - (h.amount * h.avgPrice);
+                    portfolio.cash += total;
+                    delete portfolio.holdings[s.coin];
+                    portfolio.trades.unshift({ type: 'SELL', coin: s.coin, price: s.price, amount: h.amount, total, pnl, time: new Date().toISOString() });
+                }
+            });
+            portfolio.trades = portfolio.trades.slice(0, 50);
+            localStorage.setItem('cryptoPortfolio', JSON.stringify(portfolio));
         }
-        
-        function refreshData() {
-            console.log('Refreshing demo data...');
-            updateDemoData();
+
+        function updateDisplay() {
+            let hv = 0;
+            Object.keys(portfolio.holdings).forEach(sym => { const h = portfolio.holdings[sym], c = marketData.find(x=>x.symbol===sym); if(c) hv += h.amount * c.quote.USD.price; });
+            const tv = portfolio.cash + hv, ret = tv - portfolio.initialValue, rp = (ret/portfolio.initialValue)*100;
+            document.getElementById('totalValue').textContent = formatCurrency(tv);
+            document.getElementById('cashValue').textContent = formatCurrency(portfolio.cash);
+            const re = document.getElementById('returnValue'); re.textContent = formatCurrency(ret) + ' (' + formatPercent(rp) + ')'; re.className = 'metric-value ' + (ret>=0?'positive':'negative');
+            document.getElementById('portfolioUpdate').textContent = lastFetchTime ? lastFetchTime.toLocaleTimeString() : '-';
             
-            // Add visual feedback
-            const btn = document.querySelector('.refresh-btn');
-            btn.style.transform = 'scale(0.9) rotate(180deg)';
-            setTimeout(() => {
-                btn.style.transform = '';
-            }, 300);
+            document.getElementById('pricesTable').innerHTML = marketData.slice(0,10).map(c => {
+                const ch = c.quote.USD.percent_change_24h;
+                return '<tr><td><strong>'+c.symbol+'</strong><br><small style="color:#666">'+c.name+'</small></td><td>'+formatCurrency(c.quote.USD.price)+'</td><td class="'+(ch>=0?'positive':'negative')+'">'+formatPercent(ch)+'</td><td>'+formatCurrency(c.quote.USD.market_cap)+'</td></tr>';
+            }).join('');
+
+            document.getElementById('tradingSignals').innerHTML = generateSignals(marketData).slice(0,5).map(s => {
+                const cls = s.signal.includes('BUY')?'buy':s.signal.includes('SELL')?'sell':'hold';
+                return '<div class="signal-item signal-'+cls+'"><div class="signal-header"><span class="signal-coin">'+s.coin+'</span><span class="signal-type '+cls+'">'+s.signal.replace('_',' ')+'</span></div><div style="color:#888;font-size:0.9em;margin:5px 0">'+s.reason+'</div><div style="color:#00d9ff;font-size:0.9em">Price: '+formatCurrency(s.price)+'</div><div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;margin-top:8px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,#00d9ff,#00ff88);width:'+s.strength+'%"></div></div></div>';
+            }).join('');
+
+            const holds = Object.keys(portfolio.holdings);
+            if (holds.length === 0) document.getElementById('activePositions').innerHTML = '<p style="color:#666;text-align:center;padding:20px;">No active positions</p>';
+            else {
+                let h = '<table><thead><tr><th>Coin</th><th>Amount</th><th>Avg Price</th><th>Current</th><th>PnL</th></tr></thead><tbody>';
+                holds.forEach(sym => { const hd = portfolio.holdings[sym], cd = marketData.find(x=>x.symbol===sym); if(cd) { const cp = cd.quote.USD.price, pnl = (cp-hd.avgPrice)*hd.amount, pp = ((cp-hd.avgPrice)/hd.avgPrice)*100; h += '<tr><td><strong>'+sym+'</strong></td><td>'+hd.amount.toFixed(6)+'</td><td>'+formatCurrency(hd.avgPrice)+'</td><td>'+formatCurrency(cp)+'</td><td class="'+(pnl>=0?'positive':'negative')+'">'+formatCurrency(pnl)+' ('+formatPercent(pp)+')</td></tr>'; }});
+                document.getElementById('activePositions').innerHTML = h + '</tbody></table>';
+            }
+
+            if (portfolio.trades.length === 0) document.getElementById('tradeHistoryBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:#666;">No trades yet</td></tr>';
+            else document.getElementById('tradeHistoryBody').innerHTML = portfolio.trades.slice(0,10).map(t => '<tr><td><span class="signal-type '+t.type.toLowerCase()+'">'+t.type+'</span></td><td><strong>'+t.coin+'</strong></td><td>'+formatCurrency(t.price)+'</td><td>'+t.amount.toFixed(6)+'</td><td>'+formatCurrency(t.total)+'</td><td>'+formatTime(t.time)+'</td></tr>').join('');
         }
-        
-        // Update demo data every 5 seconds
-        setInterval(updateDemoData, 5000);
-        
-        // Initial load
-        updateDemoData();
-        
-        console.log('AI Crypto Trader Dashboard loaded in demo mode');
-        console.log('For live trading data, run: python dashboard_server.py');
+
+        async function fetchAllData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('dashboardContent').style.display = 'none';
+            document.getElementById('errorContainer').innerHTML = '';
+            try {
+                await fetchMarketData();
+                simulateTrading(generateSignals(marketData));
+                updateDisplay();
+                document.getElementById('statusBadge').textContent = '● Live - Real Market Data';
+                document.getElementById('statusBadge').className = 'status-badge status-live';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+            } catch(e) {
+                document.getElementById('statusBadge').textContent = '○ Offline';
+                document.getElementById('statusBadge').className = 'status-badge status-offline';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboardContent').style.display = 'block';
+                document.getElementById('errorContainer').innerHTML = '<div class="error">⚠️ '+e.message+'</div>';
+            }
+        }
+
+        fetchAllData();
+        setInterval(fetchAllData, 30000);
+        console.log('AI Crypto Trader initialized with API key: markapi');
     </script>
 </body>
 </html>
