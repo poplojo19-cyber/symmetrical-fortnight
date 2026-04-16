@@ -54,11 +54,11 @@
             <p class="subtitle">Real-time Paper Trading Dashboard</p>
             <div id="statusBadge" class="status-badge status-offline">Connecting...</div>
             <div style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:15px;margin:20px auto;max-width:800px;">
-                <strong>⚠️ Paper Trading Mode:</strong> This bot uses virtual money for testing strategies. All trades are simulated using REAL market data from CoinMarketCap API.
+                <strong>⚠️ Paper Trading Mode:</strong> This bot uses virtual money for testing strategies. All trades are simulated using REAL market data from Binance Public API (no key required).
             </div>
         </header>
 
-        <div id="loading" class="loading"><p>🔄 Fetching live market data from CoinMarketCap...</p></div>
+        <div id="loading" class="loading"><p>🔄 Fetching live market data from Binance...</p></div>
         <div id="errorContainer"></div>
 
         <div id="dashboardContent" style="display:none;">
@@ -71,7 +71,7 @@
                     <div class="last-update">Last updated: <span id="portfolioUpdate">-</span></div>
                 </div>
                 <div class="card" style="grid-column: span 2;">
-                    <h2>📊 Live Crypto Prices (from CoinMarketCap)</h2>
+                    <h2>📊 Live Crypto Prices (from Binance)</h2>
                     <table><thead><tr><th>Coin</th><th>Price (USD)</th><th>24h Change</th><th>Market Cap</th></tr></thead><tbody id="pricesTable"><tr><td colspan="4" class="loading">Loading prices...</td></tr></tbody></table>
                 </div>
             </div>
@@ -86,41 +86,75 @@
         <button class="refresh-btn" onclick="fetchAllData()" title="Refresh">🔄</button>
         <footer>
             <p>⚠️ Educational Purpose Only. Cryptocurrency trading involves substantial risk.</p>
-            <p>Data from <a href="https://coinmarketcap.com/" target="_blank">CoinMarketCap API</a></p>
+            <p>Data from <a href="https://coinmarketcap.com/" target="_blank">Binance API</a></p>
             <p class="last-update">Updates every 30 seconds</p>
         </footer>
     </div>
 
     <script>
-        const CMC_API_KEY = 'markapi';
-        const CMC_BASE_URL = 'https://pro-api.coinmarketcap.com/v1';
+        // Using FREE Binance public API - no API key needed!
+        const BINANCE_API = 'https://api.binance.com/api/v3';
         let portfolio = JSON.parse(localStorage.getItem('cryptoPortfolio')) || { cash: 10000, holdings: {}, trades: [], initialValue: 10000 };
         let marketData = {};
         let lastFetchTime = null;
+
+        const COINS = ['BTC', 'ETH', 'BNB', 'SOL', 'ADA', 'DOT', 'MATIC', 'LINK'];
 
         function formatCurrency(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v); }
         function formatPercent(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
         function formatTime(iso) { if (!iso) return '-'; const d = new Date(iso), diff = (new Date() - d) / 1000; if (diff < 60) return 'Just now'; if (diff < 3600) return Math.floor(diff/60)+'m ago'; return d.toLocaleDateString(); }
 
         async function fetchMarketData() {
-            const response = await fetch(CMC_BASE_URL + '/cryptocurrency/listings/latest?limit=20', {
-                headers: { 'X-CMC_PRO_API_KEY': CMC_API_KEY, 'Accept': 'application/json' }
+            // Fetch real prices from Binance public API (no key needed)
+            const promises = COINS.map(async (coin) => {
+                try {
+                    const response = await fetch(`${BINANCE_API}/ticker/24hr?symbol=${coin}USDT`);
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    return {
+                        symbol: coin,
+                        price: parseFloat(data.lastPrice),
+                        change24h: parseFloat(data.priceChangePercent),
+                        volume: parseFloat(data.volume),
+                        high24h: parseFloat(data.highPrice),
+                        low24h: parseFloat(data.lowPrice)
+                    };
+                } catch (e) {
+                    console.error(`Error fetching ${coin}:`, e);
+                    return null;
+                }
             });
-            if (!response.ok) throw new Error('API Error: ' + response.status);
-            const data = await response.json();
-            marketData = data.data;
+            
+            const results = await Promise.all(promises);
+            marketData = results.filter(r => r !== null);
             lastFetchTime = new Date();
             return marketData;
         }
 
+        function calculateRSI(change24h) {
+            // Simplified RSI based on 24h change
+            return Math.max(0, Math.min(100, 50 + (change24h * 2)));
+        }
+
         function generateSignals(data) {
             return data.map(coin => {
-                const price = coin.quote.USD.price, change24h = coin.quote.USD.percent_change_24h;
-                const rsi = 50 + (change24h * 2);
+                const price = coin.price, change24h = coin.change24h;
+                const rsi = calculateRSI(change24h);
                 let signal = 'HOLD', strength = 50, reason = 'Neutral';
-                if (rsi < 30 || change24h < -5) { signal = change24h < -10 ? 'STRONG_BUY' : 'BUY'; strength = Math.min(90, 50 + Math.abs(change24h)*3); reason = 'Oversold (' + change24h.toFixed(2) + '%)'; }
-                else if (rsi > 70 || change24h > 5) { signal = change24h > 10 ? 'STRONG_SELL' : 'SELL'; strength = Math.min(90, 50 + change24h*3); reason = 'Overbought (' + change24h.toFixed(2) + '%)'; }
-                return { coin: coin.symbol, price, signal, strength, reason, change24h };
+                
+                if (rsi < 30 || change24h < -5) { 
+                    signal = change24h < -10 ? 'STRONG_BUY' : 'BUY'; 
+                    strength = Math.min(90, 50 + Math.abs(change24h)*3); 
+                    reason = `Oversold (RSI: ${rsi.toFixed(1)}, 24h: ${change24h.toFixed(2)}%)`; 
+                } else if (rsi > 70 || change24h > 5) { 
+                    signal = change24h > 10 ? 'STRONG_SELL' : 'SELL'; 
+                    strength = Math.min(90, 50 + change24h*3); 
+                    reason = `Overbought (RSI: ${rsi.toFixed(1)}, 24h: ${change24h.toFixed(2)}%)`; 
+                } else {
+                    reason = `Neutral (RSI: ${rsi.toFixed(1)})`;
+                }
+                
+                return { coin: coin.symbol, price, signal, strength, reason, change24h, high24h: coin.high24h, low24h: coin.low24h };
             }).sort((a,b) => b.strength - a.strength);
         }
 
@@ -145,16 +179,16 @@
 
         function updateDisplay() {
             let hv = 0;
-            Object.keys(portfolio.holdings).forEach(sym => { const h = portfolio.holdings[sym], c = marketData.find(x=>x.symbol===sym); if(c) hv += h.amount * c.quote.USD.price; });
+            Object.keys(portfolio.holdings).forEach(sym => { const h = portfolio.holdings[sym], c = marketData.find(x=>x.symbol===sym); if(c) hv += h.amount * c.price; });
             const tv = portfolio.cash + hv, ret = tv - portfolio.initialValue, rp = (ret/portfolio.initialValue)*100;
             document.getElementById('totalValue').textContent = formatCurrency(tv);
             document.getElementById('cashValue').textContent = formatCurrency(portfolio.cash);
             const re = document.getElementById('returnValue'); re.textContent = formatCurrency(ret) + ' (' + formatPercent(rp) + ')'; re.className = 'metric-value ' + (ret>=0?'positive':'negative');
             document.getElementById('portfolioUpdate').textContent = lastFetchTime ? lastFetchTime.toLocaleTimeString() : '-';
             
-            document.getElementById('pricesTable').innerHTML = marketData.slice(0,10).map(c => {
-                const ch = c.quote.USD.percent_change_24h;
-                return '<tr><td><strong>'+c.symbol+'</strong><br><small style="color:#666">'+c.name+'</small></td><td>'+formatCurrency(c.quote.USD.price)+'</td><td class="'+(ch>=0?'positive':'negative')+'">'+formatPercent(ch)+'</td><td>'+formatCurrency(c.quote.USD.market_cap)+'</td></tr>';
+            document.getElementById('pricesTable').innerHTML = marketData.map(c => {
+                const ch = c.change24h;
+                return '<tr><td><strong>'+c.symbol+'</strong></td><td>'+formatCurrency(c.price)+'</td><td class="'+(ch>=0?'positive':'negative')+'">'+formatPercent(ch)+'</td><td>'+c.volume.toLocaleString(undefined,{maximumFractionDigits:0})+'</td></tr>';
             }).join('');
 
             document.getElementById('tradingSignals').innerHTML = generateSignals(marketData).slice(0,5).map(s => {
@@ -166,7 +200,7 @@
             if (holds.length === 0) document.getElementById('activePositions').innerHTML = '<p style="color:#666;text-align:center;padding:20px;">No active positions</p>';
             else {
                 let h = '<table><thead><tr><th>Coin</th><th>Amount</th><th>Avg Price</th><th>Current</th><th>PnL</th></tr></thead><tbody>';
-                holds.forEach(sym => { const hd = portfolio.holdings[sym], cd = marketData.find(x=>x.symbol===sym); if(cd) { const cp = cd.quote.USD.price, pnl = (cp-hd.avgPrice)*hd.amount, pp = ((cp-hd.avgPrice)/hd.avgPrice)*100; h += '<tr><td><strong>'+sym+'</strong></td><td>'+hd.amount.toFixed(6)+'</td><td>'+formatCurrency(hd.avgPrice)+'</td><td>'+formatCurrency(cp)+'</td><td class="'+(pnl>=0?'positive':'negative')+'">'+formatCurrency(pnl)+' ('+formatPercent(pp)+')</td></tr>'; }});
+                holds.forEach(sym => { const hd = portfolio.holdings[sym], cd = marketData.find(x=>x.symbol===sym); if(cd) { const cp = cd.price, pnl = (cp-hd.avgPrice)*hd.amount, pp = ((cp-hd.avgPrice)/hd.avgPrice)*100; h += '<tr><td><strong>'+sym+'</strong></td><td>'+hd.amount.toFixed(6)+'</td><td>'+formatCurrency(hd.avgPrice)+'</td><td>'+formatCurrency(cp)+'</td><td class="'+(pnl>=0?'positive':'negative')+'">'+formatCurrency(pnl)+' ('+formatPercent(pp)+')</td></tr>'; }});
                 document.getElementById('activePositions').innerHTML = h + '</tbody></table>';
             }
 
@@ -197,7 +231,7 @@
 
         fetchAllData();
         setInterval(fetchAllData, 30000);
-        console.log('AI Crypto Trader initialized with API key: markapi');
+        console.log('AI Crypto Trader initialized - Using Binance Public API (no key required)');
     </script>
 </body>
 </html>
